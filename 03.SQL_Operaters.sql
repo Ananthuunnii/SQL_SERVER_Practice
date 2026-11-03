@@ -37,8 +37,23 @@ select * from Employees where EmployeeID <> 1 ;
 select * from Employees where [location] <> 'Goa' ;
 
 ----------Logical Operaters
+select * from Employees where [location] = 'Goa' AND Salary > 90000;
+select * from Employees where [location] = 'Goa' OR Salary > 90000;
 
+select * from Employees where NOT [location] = 'Goa';  -- the goa location not list and also the location contain null the row also not print
 
 ----------Special Operaters
 
+select * from Employees where [location] in ('Goa','Gurugram');
+
+
+select * from Employees where Age BETWEEN 24 AND 30;	-- 'BETWEEN' is used to fetch record in a perticular range using 'AND' operater
+
+
+select * from Employees where EmpName LIKE 'J%';		-- "LIKE" used with the "%" to fetch the record based on the requirement 
+
+
+select * from Employees where Salary IS NULL;	--// fetching the null salary -- 'IS NULL' is used to fetch the null values from the record
+
+select * from Employees where NOT Salary IS NULL;
 
