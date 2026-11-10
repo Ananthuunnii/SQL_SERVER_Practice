@@ -61,7 +61,7 @@ select employeeName from Employeees where employeAge > (select avg(age) from Emp
 
 
 
--- IN operater 
+-- IN operator 
 
 select departmentId from department where departmentName IN ('HR','IT');			-- we get the hr and it related department
 
@@ -70,22 +70,19 @@ from Employeees
 where departmentid NOT IN (select departmentId from department where departmentName = 'HR')
 
 
--- NOT IN operater 
+-- NOT IN operator 
 select departmentId from department where departmentName NOT IN ('HR','IT');	-- filter out the hr and it from the list and show rest all data
 
-select employeeId,employeeName 
-from Employeees
-where departmentid NOT IN (select departmentId from department where departmentName = 'HR')
 
 
-
--- ANY Operater used with any composit operater
-select Employeename from Employeees where salary > ANY (
-select salary from Employeees where departmentid =
+-- ANY operator used with any composit operator
+select Employeename from Employeees 
+where salary > ANY (
+select salary from Employeees where departmentid IN
 (select departmentId from department where departmentName = 'HR'));
 
 
--- EXISTs Operater
+-- EXISTS operator
 select * from department d
 where exists (select 1 from Employeees e where d.departmentId = e.departmentId)
 
@@ -98,29 +95,36 @@ where departmentid in (select departmentId from department where departmentName 
 
 -- 2. Multi row sub query
 select Employeename from Employeees where salary > ANY (
-select salary from Employeees where departmentid =
+select salary from Employeees where departmentid IN				---- in multi row sub query use IN operator
 (select departmentId from department where departmentName = 'HR'));
 
---3. Corelated sub query
+--3. Correlated sub query
 -- it depends upon the outer query for it's value
---commonly used with exists and not exists operaters 
+--commonly used with exists and not exists operator 
 select * from department d
 where exists (select 1 from Employeees e where d.departmentId = e.departmentId)
 
 select * from department d
 where exists (select 1 from employeees e where e.salary > 500000 and 
-d.departmentID = e.departmentId);												 -- corelated condition
+d.departmentID = e.departmentId);												 -- Correlated condition
 
 
 -- 4. Nested sub query
 
 --display the employee name who worked in the IT depaerment
+select employeeName from Employeees
+where departmentId = (
+    select departmentId from department
+    where locationId = (
+        select locationId from location where city = 'Pune'
+    )
+);
 
-select employeeName from Employeees where departmentId = (
-	select departmentId from department where departmentName = (
-		select 'IT'	
-	)
-)
+-- select employeeName from Employeees where departmentId = (
+-- 	select departmentId from department where departmentName = (
+-- 		select 'IT'	
+-- 	)
+-- )
 
 
 
