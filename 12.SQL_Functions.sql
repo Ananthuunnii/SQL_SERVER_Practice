@@ -10,6 +10,14 @@
 -- multiple statement table-valued function		-- retunr multiple rows and have multiple sql statements
 
 
+
+-------------------------------------   Specal way of inserting into a table ----------------------------------
+insert into myEmployeees (employeeId,employeeName,employeAge,salary,departId)
+select 11,'jack',101,500000,4;
+
+select * from myEmployeees; -- checking the insertion
+
+---------------------------------------------------------------------------------------------------------------
 create table myEmployeees(
 	employeeId int primary key,
 	employeeName varchar(20),
@@ -366,3 +374,195 @@ declare @department varchar(10) = 1;
 declare @sql nvarchar(max);
 set @sql = 'select * from Employeees where departmentId = '''+ @department+'''';
 exec (@sql);
+
+
+-- Inline Table-Valued functions
+
+-- it return a table value and we only use single select statement 
+--  we can't create temporary table inside the function
+/*
+	CREATE FUNCTION <function name>
+	(
+		@parameter Datatype			-- input parameter
+	)
+	RETURNS TABLE		-- function return the TABLE
+	AS
+	RETURN
+	(
+		<Table Data>		-- single select query that return table data
+	)	
+*/
+
+-- ALTER FUNCTION fn_getEmployeesByDepartments				-- if we need to ALTER the function we can use ALTER FUNCTION and update the function
+CREATE FUNCTION fn_getEmployeesByDepartments				-- creating the table function
+(
+	@department varchar(18),
+	@salary int
+)
+RETURNS TABLE
+AS
+RETURN
+(
+	select d.departmentID,d.departmentName,m.employeeId,m.employeeName from myEmployeeesdetails m 
+	left join department d on m.departId = d.departmentID
+	where d.departmentName = @department and m.salary > @salary
+)
+
+select * from dbo.fn_getEmployeesByDepartments('IT',100000);		-- calling the table function
+select * from dbo.fn_getEmployeesByDepartments('HR',50000);
+
+
+
+-------------------------------------------------------------  IMPORTENT PART USED IN REAL TIME WORKS  -------------------------------------------------------------------
+
+------- Multistatement Table-Valued functions
+
+-- Used for more complex statements then a single select statements
+--  it will return table and we can use multiple sql querys like select, insert, create
+-- can contain if condition, loops, calculations
+/*
+	CREATE FUNCTION <function name>
+	(
+		@parameter Datatype			-- input parameter
+	)
+	RETURNS @Result TABLE		-- Used to stored the table data in @Result parameter
+	(
+		Column Name datatype	-- output table column
+	)
+	AS
+	BEGIN
+	(
+		--multi statements
+		RETURN;
+	)	
+	END;
+*/
+
+
+/*case 
+		when departId is null and employeeName is null then 0
+		else departId
+end*/
+
+---------------------------------Basics -------------------------------------------------------
+-- variable declareation
+
+declare @name varchar(20) = 'john';
+declare @age int          = 30;
+	
+select @name,@age;			-- we selecting value like displayig the result
+-- or
+print @name;				-- printing the value like we do in the javascript console.log()
+print @age;
+
+-- for tables declaration we do like
+
+declare @employesTable table
+(
+	EmployeeID int,
+	EmployeeName varchar(20)
+)
+insert into @employesTable values(1,'Petter');
+insert into @employesTable values(2,'Hulk');
+
+select * from @employesTable
+
+-----------------------------------------------------------------------------------------------
+-- query 1
+
+create function fn_GetEmployeWithCatogary_1(@department varchar(20))
+returns @departmentTable TABLE
+(
+	EmpId int,
+	EmpName varchar(12)
+)
+AS
+BEGIN
+	
+	insert into @departmentTable
+
+	select m.employeeId,m.employeeName
+	from myEmployeeesdetails m
+	RETURN								-- just return it will return the @departmentTable parameter which stored table data
+END;
+
+select * from dbo.fn_GetEmployeWithCatogary_1('IT');			-- calling the function
+
+
+-- Query 2
+alter function fn_GetEmployeWithCatogary_1(@department varchar(20))
+returns @departmentTable TABLE
+(
+	EmpId int,
+	EmpName varchar(12)
+)
+AS
+BEGIN
+	
+	insert into @departmentTable
+
+	select m.employeeId,m.employeeName
+	from myEmployeeesdetails m 
+	left join department d on m.departId = d.departmentID
+	where d.departmentName = @department; 
+	RETURN
+END;
+select * from dbo.fn_GetEmployeWithCatogary_1('IT');			-- calling the function
+
+
+
+
+
+create function fn_GetEmployeWithCatogary(@department varchar(20))
+returns @departmentTable TABLE
+(
+	EmpId int,
+	EmpName varchar(12),
+	EmpSalary decimal(10,2),
+	EmpDepartment varchar(20),
+	EmpCategory varchar(20)
+)
+AS
+BEGIN
+	
+	insert into @departmentTable
+	select m.employeeId,m.employeeName,m.salary,d.departmentName,
+	case
+		when m.salary > =50000 then 'High Salary'
+		else 'Normal salary'
+	end as Categary
+	from myEmployeeesdetails m 
+	left join department d on m.departId = d.departmentID
+	where d.departmentName = @department;
+	RETURN
+END;
+
+select * from dbo.fn_GetEmployeWithCatogary('HR');
+
+
+-- Query 4
+
+create function fn_GetEmployeeWithUpdateSalary(@department varchar(12))
+returns @employeupdatesalaryTable table
+(
+	empID int,
+	empName varchar(20),
+	empSalary decimal(10,2),
+	empDepartment varchar(20)
+)
+as 
+begin
+	insert into @employeupdatesalaryTable									--- inserting
+	select m.employeeId,m.employeeName,m.salary,d.departmentName			-- inserting the value to @employeupdatesalaryTable this variable table from a existing table with conditions
+	from myEmployeeesdetails m 
+	left join department d on m.departId = d.departmentID
+	where d.departmentName = @department;
+
+	update @employeupdatesalaryTable										--- updating , updating the salary with 10001 from the departments
+	set empSalary = empSalary + 10001
+
+	return
+end;
+
+select * from dbo.fn_GetEmployeeWithUpdateSalary('HR');						-- checking the function working fine or not and this way the function run
+
